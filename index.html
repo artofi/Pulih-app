@@ -460,12 +460,14 @@ body.dark .afirmasi-card{background:#3C3489}
   <div class="card">
     <div class="card-title">Notifikasi harian</div>
     <div class="settings-row">
-      <div><div class="settings-label">Check-in reminder</div><div class="settings-sub">Ingatkan setiap hari</div></div>
+      <div><div class="settings-label">Aktifkan reminder</div><div class="settings-sub" id="notif-status-sub">Izin diperlukan saat pertama aktif</div></div>
       <button class="toggle" id="notif-toggle" onclick="toggleNotif()"></button>
     </div>
-    <label class="field-label">Jam notifikasi</label>
+    <label class="field-label">Jam reminder harian</label>
     <input type="time" id="notif-time" value="08:00">
-    <button class="sec-btn" onclick="testNotif()">Test notifikasi sekarang</button>
+    <button class="btn-primary" onclick="scheduleNotif()" style="margin-top:8px">Simpan jam notifikasi</button>
+    <button class="sec-btn" onclick="testNotif()" style="margin-top:6px">Test notifikasi sekarang</button>
+    <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5">Catatan: Di Android, pastikan Chrome tidak diblokir di pengaturan Baterai (Battery Optimization). Buka Setelan HP → App → Chrome → Baterai → Tidak ada batasan.</div>
   </div>
 
   <!-- TAMPILAN -->
@@ -1001,28 +1003,83 @@ function addZona(){
 }
 function deleteZona(i){S.zona.splice(i,1);save();renderZonaList();}
 
-// NOTIFIKASI
-function toggleNotif(){
+// NOTIFIKASI via Service Worker
+async function getSW(){
+  if(!('serviceWorker' in navigator))return null;
+  try{return await navigator.serviceWorker.ready;}catch(e){return null;}
+}
+
+async function toggleNotif(){
+  if(!('Notification' in window)){toast('Browser tidak mendukung notifikasi');return;}
   if(!S.notifEnabled){
-    if('Notification' in window){
-      Notification.requestPermission().then(p=>{
-        if(p==='granted'){S.notifEnabled=true;save();document.getElementById('notif-toggle').classList.add('on');toast('Notifikasi aktif!');}
-        else toast('Izin notifikasi ditolak');
-      });
-    } else toast('Browser tidak mendukung notifikasi');
+    const perm = await Notification.requestPermission();
+    if(perm==='granted'){
+      S.notifEnabled=true;save();
+      document.getElementById('notif-toggle').classList.add('on');
+      toast('Notifikasi aktif!');
+      scheduleNotifLoop();
+      // Daftarkan periodic sync jika tersedia
+      const sw=await getSW();
+      if(sw&&'periodicSync' in sw){
+        try{
+          await sw.periodicSync.register('pulih-daily-reminder',{minInterval:24*60*60*1000});
+        }catch(e){}
+      }
+    } else {
+      toast('Izin notifikasi ditolak. Buka Settings HP → App → Chrome → Notifikasi → Izinkan');
+    }
   } else {
-    S.notifEnabled=false;save();document.getElementById('notif-toggle').classList.remove('on');toast('Notifikasi dimatikan');
+    S.notifEnabled=false;save();
+    document.getElementById('notif-toggle').classList.remove('on');
+    toast('Notifikasi dimatikan');
+    clearTimeout(window._notifTimer);
   }
 }
+
 function scheduleNotif(){
   const t=document.getElementById('notif-time');
   if(t)S.notifTime=t.value;
   save();
+  if(S.notifEnabled)scheduleNotifLoop();
+  toast('Jam notifikasi disimpan');
 }
-function testNotif(){
-  if('Notification' in window&&Notification.permission==='granted'){
-    new Notification('Pulih — Check-in!',{body:'Hari ke-'+getStreak()+' — jangan lupa check-in hari ini.',icon:'./icons/icon-192.png'});
-  } else toast('Aktifkan notifikasi dulu di pengaturan');
+
+function scheduleNotifLoop(){
+  clearTimeout(window._notifTimer);
+  if(!S.notifEnabled||!S.notifTime)return;
+  const [h,m]=S.notifTime.split(':').map(Number);
+  const now=new Date();
+  let next=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m,0,0);
+  if(next<=now)next.setDate(next.getDate()+1);
+  const ms=next-now;
+  window._notifTimer=setTimeout(()=>{
+    sendNotifViaSW('Pulih — Check-in Harian','Hari ke-'+getStreak()+' — jangan lupa check-in dan jaga streakmu!');
+    scheduleNotifLoop();
+  },ms);
+}
+
+async function sendNotifViaSW(title,body){
+  const sw=await getSW();
+  if(sw){
+    // Kirim via SW message → SW tampilkan notifikasi
+    sw.active.postMessage({type:'SHOW_NOTIFICATION',title,body});
+  } else if(Notification.permission==='granted'){
+    // Fallback langsung jika SW tidak siap
+    new Notification(title,{body,icon:'./icons/icon-192.png',badge:'./icons/icon-96.png',vibrate:[200,100,200]});
+  }
+}
+
+async function testNotif(){
+  if(!('Notification' in window)){toast('Browser tidak mendukung notifikasi');return;}
+  if(Notification.permission!=='granted'){
+    toast('Aktifkan notifikasi dulu dengan toggle di atas');return;
+  }
+  await sendNotifViaSW('Pulih — Test Notifikasi','Notifikasi bekerja! Streak kamu hari ke-'+getStreak()+' aman.');
+  toast('Notifikasi dikirim — cek status bar HP');
+}
+
+function initNotif(){
+  if(S.notifEnabled&&Notification.permission==='granted')scheduleNotifLoop();
 }
 
 // DARK MODE
@@ -1103,9 +1160,12 @@ function toast(msg,dur=2500){
 }
 
 // INIT
-if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-initDark();initPin();renderHome();
-// zona check setiap menit
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').then(reg=>{
+    console.log('SW registered:', reg.scope);
+  }).catch(e=>console.log('SW error:',e));
+}
+initDark();initPin();renderHome();initNotif();
 setInterval(checkZona,60000);
 </script>
 </body>
