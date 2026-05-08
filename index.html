@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#534AB7" id="theme-meta">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pulih">
+<title>Pulih v2 — Recovery Tracker</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{
+  --purple:#534AB7;--purple-light:#EEEDFE;--purple-dark:#3C3489;
+  --teal:#1D9E75;--teal-light:#E1F5EE;--teal-dark:#085041;
+  --amber:#BA7517;--amber-light:#FAEEDA;--amber-dark:#633806;
+  --red:#E24B4A;--red-light:#FCEBEB;--red-dark:#791F1F;
+  --gray:#888780;--gray-light:#F1EFE8;--gray-border:#e8e6e0;
+  --bg:#f7f6f2;--card:#fff;--text:#1a1a18;--text2:#6b6a65;--text3:#a09e99;
+  --radius:14px;--radius-sm:8px;--shadow:0 1px 3px rgba(0,0,0,.08);
+}
+body.dark{
+  --purple:#7F77DD;--purple-light:#26215C;--purple-dark:#CECBF6;
+  --teal:#5DCAA5;--teal-light:#04342C;--teal-dark:#9FE1CB;
+  --amber:#EF9F27;--amber-light:#412402;--amber-dark:#FAC775;
+  --red:#F09595;--red-light:#501313;--red-dark:#F7C1C1;
+  --gray:#B4B2A9;--gray-light:#2a2a27;--gray-border:#3a3a36;
+  --bg:#111110;--card:#1c1c1a;--text:#f0efe8;--text2:#a09e99;--text3:#5f5e5a;
+  --shadow:0 1px 4px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px;font-size:15px}
+
+#pin-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px}
+#pin-screen.show{display:flex}
+.pin-title{font-size:20px;font-weight:700;color:var(--text)}
+.pin-sub{font-size:13px;color:var(--text2);text-align:center}
+.pin-dots{display:flex;gap:14px;margin:4px 0}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--purple)}
+.pin-dot.filled{background:var(--purple)}
+.pin-error{font-size:13px;color:var(--red);min-height:18px;text-align:center}
+.pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:12px}
+.pin-key{width:72px;height:72px;border-radius:50%;border:1.5px solid var(--gray-border);background:var(--card);font-size:22px;font-weight:600;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pin-key:active{background:var(--purple-light)}
+
+#alasan-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:800;align-items:center;justify-content:center;padding:20px}
+#alasan-overlay.show{display:flex}
+.alasan-popup{background:var(--card);border-radius:20px;padding:24px;width:100%;max-width:360px}
+.alasan-popup h3{font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px}
+.alasan-popup p{font-size:13px;color:var(--text2);margin-bottom:16px}
+.ap-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-light);align-items:flex-start}
+.ap-item:last-of-type{border-bottom:none}
+.ap-num{width:28px;height:28px;border-radius:50%;background:var(--purple);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
+.ap-text{font-size:14px;color:var(--text);line-height:1.5}
+
+.nav-bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--gray-border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 0 8px;cursor:pointer;gap:3px;border:none;background:none}
+.nav-item svg{width:22px;height:22px;stroke:var(--text3);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-item span{font-size:10px;color:var(--text3);font-weight:500}
+.nav-item.active svg{stroke:var(--purple)}
+.nav-item.active span{color:var(--purple)}
+
+.page{display:none;padding:16px 16px 16px}
+.page.active{display:block}
+.page-header{margin-bottom:20px}
+.page-header h1{font-size:22px;font-weight:700;color:var(--text);margin-bottom:2px}
+.page-header p{font-size:13px;color:var(--text2)}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+
+.zona-alert{background:var(--red-light);border:1.5px solid var(--red);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;display:none}
+.zona-alert.show{display:block}
+.zona-alert strong{font-size:13px;font-weight:700;color:var(--red-dark);display:block}
+.zona-alert span{font-size:12px;color:var(--red-dark)}
+
+.afirmasi-card{background:var(--purple);border-radius:16px;padding:14px 18px;margin-bottom:12px;overflow:hidden;position:relative}
+.afirmasi-card::after{content:'';position:absolute;top:-20px;right:-20px;width:70px;height:70px;background:rgba(255,255,255,.08);border-radius:50%}
+.afirmasi-text{font-size:14px;color:#fff;line-height:1.55;font-style:italic}
+.afirmasi-date{font-size:11px;color:rgba(255,255,255,.6);margin-top:6px}
+
+.streak-hero{background:var(--purple);border-radius:20px;padding:22px 20px;text-align:center;margin-bottom:12px;color:#fff;position:relative;overflow:hidden}
+.streak-hero::before{content:'';position:absolute;top:-30px;right:-30px;width:100px;height:100px;background:rgba(255,255,255,.08);border-radius:50%}
+.streak-num{font-size:68px;font-weight:800;line-height:1;letter-spacing:-2px;color:#fff}
+.streak-unit{font-size:15px;color:rgba(255,255,255,.8);margin-top:4px}
+.streak-badges{display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap}
+.streak-phase-badge{background:rgba(255,255,255,.2);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:#fff}
+.freeze-badge{background:rgba(255,255,255,.15);border-radius:20px;padding:4px 12px;font-size:12px;color:rgba(255,255,255,.9);cursor:pointer;border:none}
+.streak-btns{display:flex;gap:10px;margin-top:14px;justify-content:center}
+.streak-btn{padding:10px 18px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer}
+.btn-check{background:#fff;color:var(--purple)}
+.btn-reset{background:rgba(255,255,255,.2);color:#fff}
+
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.metric-card{background:var(--card);border-radius:var(--radius-sm);padding:14px;box-shadow:var(--shadow)}
+.metric-label{font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:500}
+.metric-val{font-size:24px;font-weight:700;color:var(--text)}
+.metric-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.recov-bar-wrap{background:var(--gray-light);border-radius:6px;height:10px;overflow:hidden;margin:8px 0}
+.recov-bar{height:100%;border-radius:6px;background:var(--teal);transition:width .5s}
+
+.milestone-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-light)}
+.milestone-item:last-child{border-bottom:none}
+.ms-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.ms-dot.done{background:var(--teal-light);color:var(--teal-dark)}
+.ms-dot.next{background:var(--purple-light);color:var(--purple-dark)}
+.ms-dot.future{background:var(--gray-light);color:var(--text3)}
+.ms-info{flex:1}
+.ms-day{font-size:11px;color:var(--text3)}
+.ms-title{font-size:13px;font-weight:600;color:var(--text)}
+.ms-badge{font-size:10px;padding:2px 8px;border-radius:10px;display:inline-block;margin-top:3px;font-weight:500}
+.ms-badge.done{background:var(--teal-light);color:var(--teal-dark)}
+.ms-badge.next{background:var(--purple-light);color:var(--purple-dark)}
+.ms-badge.future{background:var(--gray-light);color:var(--gray)}
+
+.mood-row{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.mood-btn{flex-shrink:0;width:50px;height:50px;border-radius:12px;border:2px solid transparent;background:var(--gray-light);cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.mood-btn.sel{border-color:var(--purple);background:var(--purple-light)}
+.mood-btn:active{transform:scale(.94)}
+textarea{width:100%;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);padding:12px;font-size:14px;line-height:1.6;resize:none;font-family:inherit;color:var(--text);background:var(--bg);outline:none}
+textarea:focus{border-color:var(--purple)}
+.btn-primary{width:100%;padding:14px;background:var(--purple);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;margin-top:10px}
+.btn-primary:active{opacity:.9;transform:scale(.99)}
+.journal-entry{background:var(--card);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px;box-shadow:var(--shadow)}
+.je-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.je-mood{font-size:20px}
+.je-date{font-size:12px;color:var(--text3)}
+.je-streak-badge{margin-left:auto;font-size:11px;background:var(--purple-light);color:var(--purple-dark);padding:2px 8px;border-radius:10px;font-weight:500}
+.je-text{font-size:13px;color:var(--text2);line-height:1.6}
+.je-empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px}
+
+.mood-chart-row{display:flex;align-items:flex-end;gap:4px;height:64px;padding:0 2px}
+.mood-bar-c{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px}
+.mood-bar-v{width:100%;border-radius:3px 3px 0 0;min-height:3px}
+.mood-bar-l{font-size:9px;color:var(--text3);text-align:center;overflow:hidden;white-space:nowrap;max-width:100%}
+
+.urge-level-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.urge-lvl-btn{padding:12px 6px;border-radius:var(--radius-sm);border:1.5px solid var(--gray-border);background:var(--card);cursor:pointer;text-align:center;font-size:12px;font-weight:600;color:var(--text2)}
+.urge-lvl-btn.sel-low{background:var(--teal-light);border-color:var(--teal);color:var(--teal-dark)}
+.urge-lvl-btn.sel-med{background:var(--amber-light);border-color:var(--amber);color:var(--amber-dark)}
+.urge-lvl-btn.sel-high{background:var(--red-light);border-color:var(--red);color:var(--red-dark)}
+.urge-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.urge-action{background:var(--card);border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);padding:12px;cursor:pointer;text-align:left}
+.urge-action.ticked{background:var(--teal-light);border-color:var(--teal)}
+.ua-icon{font-size:20px;margin-bottom:4px}
+.ua-title{font-size:12px;font-weight:600;color:var(--text);line-height:1.3}
+.urge-action.ticked .ua-title{color:var(--teal-dark)}
+.ua-time{font-size:11px;color:var(--text3)}
+.fact-banner{background:var(--purple-light);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;border-left:3px solid var(--purple)}
+.fact-banner p{font-size:13px;color:var(--purple-dark);line-height:1.5}
+.timer-section{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);text-align:center;margin-bottom:12px}
+.timer-big{font-size:48px;font-weight:800;color:var(--purple);letter-spacing:-1px;margin:8px 0}
+.timer-sub{font-size:12px;color:var(--text2);margin-bottom:12px}
+.timer-btns{display:flex;gap:8px;justify-content:center}
+.timer-btns button{flex:1;padding:12px;border-radius:var(--radius-sm);border:none;font-size:14px;font-weight:600;cursor:pointer}
+.btn-tstart{background:var(--purple);color:#fff}
+.btn-tstop{background:var(--gray-light);color:var(--text)}
+
+.breath-wrap{display:flex;flex-direction:column;align-items:center;padding:8px 0 16px;gap:8px}
+.breath-ring{width:120px;height:120px;border-radius:50%;border:4px solid var(--purple-light);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform 4s ease-in-out,border-color .5s;gap:4px}
+.breath-ring.inhale{transform:scale(1.35);border-color:var(--teal)}
+.breath-ring.hold{transform:scale(1.35);border-color:var(--amber)}
+.breath-ring.exhale{transform:scale(1);border-color:var(--purple)}
+.breath-phase-label{font-size:13px;font-weight:700;color:var(--text)}
+.breath-count-label{font-size:28px;font-weight:800;color:var(--purple);line-height:1}
+.breath-info{font-size:12px;color:var(--text3)}
+.breath-cycle-info{font-size:11px;color:var(--text3)}
+
+.urge-log-item{background:var(--card);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow)}
+.ul-badge{padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;flex-shrink:0}
+.ul-low{background:var(--teal-light);color:var(--teal-dark)}
+.ul-med{background:var(--amber-light);color:var(--amber-dark)}
+.ul-high{background:var(--red-light);color:var(--red-dark)}
+.ul-date{font-size:11px;color:var(--text3);margin-left:auto}
+
+.target-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-light)}
+.target-item:last-child{border-bottom:none}
+.target-check{width:26px;height:26px;border-radius:6px;border:2px solid var(--gray-border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:13px;background:var(--card)}
+.target-check.done{background:var(--teal);border-color:var(--teal);color:#fff}
+.target-text{flex:1;font-size:13px;color:var(--text);line-height:1.4}
+.target-text.done{color:var(--text3);text-decoration:line-through}
+.phase-header-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.phase-dot-small{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.phase-name{font-size:14px;font-weight:600}
+.phase-range{font-size:12px;color:var(--text3);margin-left:auto}
+.phase-prog-text{font-size:11px;color:var(--text3);margin-top:4px;margin-bottom:2px}
+
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--gray-light)}
+.settings-row:last-child{border-bottom:none}
+.settings-label{font-size:14px;color:var(--text)}
+.settings-sub{font-size:12px;color:var(--text3)}
+.toggle{width:44px;height:26px;border-radius:13px;background:var(--gray-border);position:relative;cursor:pointer;transition:background .2s;border:none;flex-shrink:0}
+.toggle.on{background:var(--purple)}
+.toggle::after{content:'';width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(18px)}
+.danger-btn{width:100%;padding:13px;background:var(--red-light);color:var(--red-dark);border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;margin-top:8px}
+.sec-btn{width:100%;padding:13px;background:var(--gray-light);color:var(--text);border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;margin-top:8px}
+
+.list-item-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-light)}
+.list-item-row:last-child{border-bottom:none}
+.list-num{width:26px;height:26px;border-radius:50%;background:var(--purple-light);color:var(--purple-dark);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
+.list-item-text{font-size:14px;color:var(--text);line-height:1.5;flex:1}
+.list-delete{font-size:18px;color:var(--text3);cursor:pointer;padding:0 4px;background:none;border:none}
+
+.relapse-entry{background:var(--card);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px;box-shadow:var(--shadow);border-left:3px solid var(--red)}
+.re-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.re-date{font-size:12px;color:var(--text3)}
+.re-streak{font-size:11px;background:var(--red-light);color:var(--red-dark);padding:2px 8px;border-radius:10px;font-weight:500;margin-left:auto}
+.re-text{font-size:13px;color:var(--text2);line-height:1.5}
+.re-lesson{font-size:12px;color:var(--teal-dark);background:var(--teal-light);padding:6px 10px;border-radius:6px;margin-top:6px}
+
+input[type=text],input[type=time]{width:100%;padding:11px 14px;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);background:var(--bg);outline:none;font-family:inherit;margin-top:6px}
+input:focus{border-color:var(--purple)}
+.field-label{font-size:13px;color:var(--text2);display:block;margin-top:12px;margin-bottom:0}
+
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a18;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:9998}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+body.dark .mood-btn{background:#2a2a27}
+body.dark .mood-btn.sel{background:#26215C;border-color:#7F77DD}
+body.dark .urge-lvl-btn{background:#1c1c1a;color:#a09e99}
+body.dark .urge-action{background:#1c1c1a;border-color:#3a3a36}
+body.dark .urge-action.ticked{background:#04342C;border-color:#5DCAA5}
+body.dark .timer-section{background:#1c1c1a}
+body.dark .timer-big{color:#7F77DD}
+body.dark .btn-tstop{background:#2a2a27;color:#f0efe8}
+body.dark .metric-card{background:#1c1c1a}
+body.dark .fact-banner{background:#26215C;border-left-color:#7F77DD}
+body.dark .fact-banner p{color:#CECBF6}
+body.dark .journal-entry,.relapse-entry,.urge-log-item{background:#1c1c1a}
+body.dark .ms-dot.done{background:#04342C}
+body.dark .ms-dot.next{background:#26215C}
+body.dark .ms-dot.future{background:#2a2a27}
+body.dark .target-check{border-color:#3a3a36;background:#1c1c1a}
+body.dark .target-check.done{background:#5DCAA5;border-color:#5DCAA5}
+body.dark textarea,body.dark input[type=text],body.dark input[type=time]{background:#111110;color:#f0efe8;border-color:#3a3a36}
+body.dark .alasan-popup{background:#1c1c1a}
+body.dark #pin-screen{background:#111110}
+body.dark .pin-key{background:#2a2a27;border-color:#3a3a36}
+body.dark .streak-hero{background:#3C3489}
+body.dark .sec-btn{background:#2a2a27;color:#f0efe8}
+body.dark .afirmasi-card{background:#3C3489}
+</style>
+</head>
+<body>
+
+<!-- PIN LOCK -->
+<div id="pin-screen">
+  <div class="pin-title">Pulih</div>
+  <div class="pin-sub" id="pin-sub">Masukkan PIN kamu</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+  </div>
+  <div class="pin-error" id="pin-error"></div>
+  <div class="pin-pad">
+    <button class="pin-key" onclick="pinKey('1')">1</button>
+    <button class="pin-key" onclick="pinKey('2')">2</button>
+    <button class="pin-key" onclick="pinKey('3')">3</button>
+    <button class="pin-key" onclick="pinKey('4')">4</button>
+    <button class="pin-key" onclick="pinKey('5')">5</button>
+    <button class="pin-key" onclick="pinKey('6')">6</button>
+    <button class="pin-key" onclick="pinKey('7')">7</button>
+    <button class="pin-key" onclick="pinKey('8')">8</button>
+    <button class="pin-key" onclick="pinKey('9')">9</button>
+    <button class="pin-key" onclick="pinKey('del')" style="font-size:16px">⌫</button>
+    <button class="pin-key" onclick="pinKey('0')">0</button>
+    <button class="pin-key" onclick="pinKey('ok')" style="background:var(--purple-light);color:var(--purple-dark);font-size:14px">OK</button>
+  </div>
+</div>
+
+<!-- ALASAN OVERLAY -->
+<div id="alasan-overlay">
+  <div class="alasan-popup">
+    <h3>Ingat alasanmu</h3>
+    <p>Kamu sudah berkomitmen untuk ini. Baca pelan-pelan.</p>
+    <div id="alasan-popup-list"></div>
+    <button class="btn-primary" style="margin-top:16px" onclick="document.getElementById('alasan-overlay').classList.remove('show')">Saya kuat. Tutup.</button>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="pg-home" class="page active">
+  <div id="zona-alert" class="zona-alert">
+    <strong>Zona Merah Aktif</strong>
+    <span id="zona-alert-sub">Kamu sedang di jam berisiko. Waspada.</span>
+  </div>
+  <div class="afirmasi-card" id="afirmasi-card">
+    <div class="afirmasi-text" id="afirmasi-text">Setiap hari yang kamu pilih untuk bebas adalah kemenangan nyata.</div>
+    <div class="afirmasi-date" id="afirmasi-date"></div>
+  </div>
+  <div class="streak-hero">
+    <div class="streak-num" id="streak-num">0</div>
+    <div class="streak-unit">hari bebas PMO</div>
+    <div class="streak-badges">
+      <span class="streak-phase-badge" id="streak-phase">Fase 1 — Detoks</span>
+      <button class="freeze-badge" onclick="useFreeze()" title="Streak Freeze">Freeze <span id="freeze-count">2</span></button>
+    </div>
+    <div class="streak-btns">
+      <button class="streak-btn btn-check" onclick="checkIn()">✓ Check-in</button>
+      <button class="streak-btn btn-reset" onclick="confirmReset()">Reset</button>
+    </div>
+  </div>
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-label">Pemulihan otak</div>
+      <div class="metric-val" id="brain-pct">0%</div>
+      <div class="recov-bar-wrap"><div class="recov-bar" id="brain-bar" style="width:0%"></div></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Milestone berikut</div>
+      <div class="metric-val" id="next-ms-days">7</div>
+      <div class="metric-sub" id="next-ms-label">hari ke-7</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Check-in total</div>
+      <div class="metric-val" id="total-checkin">0</div>
+      <div class="metric-sub">hari dicatat</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Tameng berhasil</div>
+      <div class="metric-val" id="urge-won">0</div>
+      <div class="metric-sub">kali bertahan</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Milestone</div>
+    <div id="milestone-list"></div>
+  </div>
+</div>
+
+<!-- JOURNAL -->
+<div id="pg-journal" class="page">
+  <div class="page-header"><h1>Jurnal Suasana</h1><p>Catat perasaan harianmu</p></div>
+  <div class="card">
+    <div class="card-title">Suasana hati sekarang</div>
+    <div class="mood-row">
+      <button class="mood-btn" onclick="selectMood('😊',this)">😊</button>
+      <button class="mood-btn" onclick="selectMood('😌',this)">😌</button>
+      <button class="mood-btn" onclick="selectMood('😐',this)">😐</button>
+      <button class="mood-btn" onclick="selectMood('😔',this)">😔</button>
+      <button class="mood-btn" onclick="selectMood('😤',this)">😤</button>
+      <button class="mood-btn" onclick="selectMood('😰',this)">😰</button>
+      <button class="mood-btn" onclick="selectMood('🔥',this)">🔥</button>
+      <button class="mood-btn" onclick="selectMood('💪',this)">💪</button>
+    </div>
+    <textarea id="journal-text" rows="4" placeholder="Ceritakan kondisimu hari ini... Ada trigger? Apa yang membantu?"></textarea>
+    <button class="btn-primary" onclick="saveJournal()">Simpan catatan</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Tren suasana 30 hari</div>
+    <div class="mood-chart-row" id="mood-chart"></div>
+  </div>
+  <div id="journal-entries"><div class="je-empty" id="je-empty">Belum ada catatan.</div></div>
+</div>
+
+<!-- TAMENG (urge toolkit) -->
+<div id="pg-urge" class="page">
+  <div class="page-header"><h1>Tameng</h1><p>Gunakan saat dorongan datang sekarang</p></div>
+  <div class="fact-banner" id="urge-fact"><p>Pilih level dorongan yang kamu rasakan. Dorongan rata-rata reda dalam 15–20 menit.</p></div>
+  <div class="urge-level-row">
+    <button class="urge-lvl-btn" id="ul-low" onclick="setUrge('low')">🟢<br>Ringan</button>
+    <button class="urge-lvl-btn" id="ul-med" onclick="setUrge('med')">🟡<br>Sedang</button>
+    <button class="urge-lvl-btn" id="ul-high" onclick="setUrge('high')">🔴<br>Kuat</button>
+  </div>
+  <div class="urge-actions" id="urge-actions"></div>
+
+  <!-- BREATHING -->
+  <div class="card">
+    <div class="card-title">Napas 4-7-8</div>
+    <div class="breath-wrap">
+      <div class="breath-ring" id="breath-ring">
+        <div class="breath-phase-label" id="breath-phase">Siap</div>
+        <div class="breath-count-label" id="breath-count">—</div>
+      </div>
+      <div class="breath-cycle-info" id="breath-cycle">Siklus: 0/5</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-primary" style="margin-top:0" id="breath-btn" onclick="breathToggle()">Mulai Napas</button>
+      <button class="btn-primary" style="margin-top:0;background:var(--gray-light);color:var(--text);width:auto;padding:14px 18px" onclick="breathReset()">Reset</button>
+    </div>
+  </div>
+
+  <div class="timer-section">
+    <div style="font-size:13px;font-weight:600;color:var(--text2)">Timer tahan dorongan</div>
+    <div class="timer-big" id="urge-timer">20:00</div>
+    <div class="timer-sub" id="timer-msg">Tahan 20 menit — dorongan akan reda sendiri</div>
+    <div class="timer-btns">
+      <button class="btn-tstart" id="tbtn-start" onclick="timerToggle()">Mulai</button>
+      <button class="btn-tstop" onclick="timerReset()">Reset</button>
+    </div>
+  </div>
+
+  <div style="margin-bottom:8px">
+    <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px">Riwayat tameng</div>
+    <div id="urge-history-list"></div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div id="pg-progress" class="page">
+  <div class="page-header"><h1>Target Pemulihan</h1><p>Centang setiap pencapaian</p></div>
+  <div class="card" style="margin-bottom:8px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Total progres</div>
+        <div class="recov-bar-wrap" style="height:12px"><div class="recov-bar" id="total-progress-bar" style="width:0%"></div></div>
+      </div>
+      <div style="font-size:22px;font-weight:700;color:var(--teal)" id="total-progress-pct">0%</div>
+    </div>
+  </div>
+
+  <!-- RELAPSE TRACKER -->
+  <div class="card">
+    <div class="card-title">Relapse Tracker</div>
+    <label class="field-label">Situasi / penyebab</label>
+    <textarea id="relapse-cause" rows="2" placeholder="Apa yang terjadi sebelum relapse?"></textarea>
+    <label class="field-label">Pelajaran yang diambil</label>
+    <textarea id="relapse-lesson" rows="2" placeholder="Apa yang akan kamu lakukan berbeda?"></textarea>
+    <button class="btn-primary" onclick="saveRelapse()" style="background:var(--red)">Catat & bangkit</button>
+    <div id="relapse-list" style="margin-top:12px"></div>
+  </div>
+
+  <div id="phases-checklist"></div>
+</div>
+
+<!-- SETTINGS -->
+<div id="pg-settings" class="page">
+  <div class="page-header"><h1>Pengaturan</h1><p>Privasi penuh — data hanya di perangkatmu</p></div>
+
+  <!-- ALASAN BERHENTI -->
+  <div class="card">
+    <div class="card-title">Alasan berhenti</div>
+    <div id="alasan-list"></div>
+    <input type="text" id="alasan-input" placeholder="Tulis alasan kamu..." style="margin-top:10px">
+    <button class="btn-primary" onclick="addAlasan()">Tambah alasan</button>
+    <button class="sec-btn" onclick="showAlasan()">Lihat saat darurat</button>
+  </div>
+
+  <!-- AFIRMASI -->
+  <div class="card">
+    <div class="card-title">Afirmasi harian</div>
+    <div id="afirmasi-list"></div>
+    <input type="text" id="afirmasi-input" placeholder="Tambah afirmasi...">
+    <button class="btn-primary" onclick="addAfirmasi()">Tambah afirmasi</button>
+  </div>
+
+  <!-- ZONA MERAH -->
+  <div class="card">
+    <div class="card-title">Zona merah</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:10px">Jam berisiko tinggi — aplikasi akan memperingatkan otomatis</p>
+    <div id="zona-list"></div>
+    <label class="field-label">Jam mulai</label>
+    <input type="time" id="zona-start">
+    <label class="field-label">Deskripsi situasi</label>
+    <input type="text" id="zona-desc" placeholder="misal: Malam sendirian di kamar">
+    <button class="btn-primary" onclick="addZona()">Tambah zona merah</button>
+  </div>
+
+  <!-- NOTIFIKASI -->
+  <div class="card">
+    <div class="card-title">Notifikasi harian</div>
+    <div class="settings-row">
+      <div><div class="settings-label">Check-in reminder</div><div class="settings-sub">Ingatkan setiap hari</div></div>
+      <button class="toggle" id="notif-toggle" onclick="toggleNotif()"></button>
+    </div>
+    <label class="field-label">Jam notifikasi</label>
+    <input type="time" id="notif-time" value="08:00">
+    <button class="sec-btn" onclick="testNotif()">Test notifikasi sekarang</button>
+  </div>
+
+  <!-- TAMPILAN -->
+  <div class="card">
+    <div class="card-title">Tampilan</div>
+    <div class="settings-row">
+      <div><div class="settings-label">Mode gelap</div><div class="settings-sub">Nyaman di malam hari</div></div>
+      <button class="toggle" id="dark-toggle" onclick="toggleDark()"></button>
+    </div>
+  </div>
+
+  <!-- PIN -->
+  <div class="card">
+    <div class="card-title">Keamanan</div>
+    <div class="settings-row">
+      <div><div class="settings-label">PIN Lock</div><div class="settings-sub" id="pin-status-sub">Tidak aktif</div></div>
+      <button class="toggle" id="pin-toggle" onclick="togglePin()"></button>
+    </div>
+    <div id="pin-setup-area" style="display:none">
+      <label class="field-label">Buat PIN 4 digit</label>
+      <input type="text" id="pin-new-input" maxlength="4" placeholder="0000" style="letter-spacing:8px;font-size:20px;text-align:center">
+      <button class="btn-primary" onclick="savePin()">Simpan PIN</button>
+    </div>
+  </div>
+
+  <!-- STREAK FREEZE INFO -->
+  <div class="card">
+    <div class="card-title">Streak Freeze</div>
+    <div class="settings-row">
+      <div><div class="settings-label">Sisa freeze</div><div class="settings-sub">Diisi ulang tiap bulan</div></div>
+      <div style="font-size:18px;font-weight:700;color:var(--purple)" id="freeze-settings-count">2</div>
+    </div>
+  </div>
+
+  <!-- INFO -->
+  <div class="card">
+    <div class="card-title">Info streak</div>
+    <div class="settings-row"><div><div class="settings-label">Mulai streak</div><div class="settings-sub" id="start-date-display">Belum dimulai</div></div></div>
+    <div class="settings-row"><div><div class="settings-label">Streak terpanjang</div><div class="settings-sub" id="best-streak-display">0 hari</div></div></div>
+    <div class="settings-row"><div><div class="settings-label">Total relapse dicatat</div><div class="settings-sub" id="relapse-count-display">0 kali</div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Data</div>
+    <button class="btn-primary" onclick="exportData()" style="margin-top:0">Export data (JSON)</button>
+    <button class="danger-btn" onclick="confirmFullReset()">Hapus semua data</button>
+  </div>
+  <div style="text-align:center;padding:20px;font-size:12px;color:var(--text3)">Pulih v2.0 — semua data tersimpan lokal</div>
+</div>
+
+<!-- NAV -->
+<nav class="nav-bar">
+  <button class="nav-item active" id="nav-home" onclick="goTo('home')">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Beranda</span>
+  </button>
+  <button class="nav-item" id="nav-journal" onclick="goTo('journal')">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    <span>Jurnal</span>
+  </button>
+  <button class="nav-item" id="nav-urge" onclick="goTo('urge')">
+    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <span>Tameng</span>
+  </button>
+  <button class="nav-item" id="nav-progress" onclick="goTo('progress')">
+    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    <span>Target</span>
+  </button>
+  <button class="nav-item" id="nav-settings" onclick="goTo('settings')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span>Setelan</span>
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATIC DATA ─────────────────────────────────────────────
+const MILESTONES=[
+  {day:1,title:'Hari pertama',badge:'Mulai'},
+  {day:3,title:'3 hari — badai pertama dilewati',badge:'Kritis'},
+  {day:7,title:'1 minggu',badge:'Minggu 1'},
+  {day:14,title:'2 minggu — flatline normal',badge:'Normal'},
+  {day:30,title:'30 hari — bulan pertama',badge:'30 Hari'},
+  {day:60,title:'60 hari — kepercayaan naik',badge:'60 Hari'},
+  {day:90,title:'90 hari — titik kritis rewiring',badge:'Kritis'},
+  {day:180,title:'180 hari — identitas berubah',badge:'6 Bulan'},
+  {day:270,title:'270 hari',badge:'9 Bulan'},
+  {day:365,title:'365 hari — pulih penuh',badge:'Pulih'},
+];
+const PHASES=[
+  {id:'f1',label:'1',name:'Detoks & Kesadaran',range:'Minggu 1–4',color:'#534AB7',bg:'#EEEDFE',
+   items:[{id:'f1_1',text:'Akui ini kecanduan, bukan kelemahan moral'},{id:'f1_2',text:'Hapus semua konten & akun pemicu'},{id:'f1_3',text:'Pasang app blocker di semua perangkat'},{id:'f1_4',text:'Catat setiap dorongan dalam jurnal'},{id:'f1_5',text:'Tidur sebelum 23.00, bangun sebelum 06.00'},{id:'f1_6',text:'Identifikasi 3 trigger utama'},{id:'f1_7',text:'Ceritakan ke 1 orang terpercaya'}]},
+  {id:'f2',label:'2',name:'Membangun Fondasi',range:'Bulan 2–3',color:'#1D9E75',bg:'#E1F5EE',
+   items:[{id:'f2_1',text:'Olahraga minimal 3x seminggu'},{id:'f2_2',text:'Meditasi / zikir 10 menit setiap pagi'},{id:'f2_3',text:'Kurangi HP setelah jam 21.00'},{id:'f2_4',text:'Punya hobi produktif baru'},{id:'f2_5',text:'Capai streak 30 hari'},{id:'f2_6',text:'Pahami siklus dopamin otak'},{id:'f2_7',text:'Buat rutinitas pagi yang solid'}]},
+  {id:'f3',label:'3',name:'Rewiring Otak',range:'Bulan 3–6',color:'#185FA5',bg:'#E6F1FB',
+   items:[{id:'f3_1',text:'Capai streak 90 hari'},{id:'f3_2',text:'Interaksi sosial nyata secara aktif'},{id:'f3_3',text:'Konsultasi psikolog jika ada trauma'},{id:'f3_4',text:'Bangun hubungan emosional sehat dengan diri'},{id:'f3_5',text:'Produktivitas meningkat nyata'},{id:'f3_6',text:'Tidak lagi kosong saat sendirian'},{id:'f3_7',text:'Respons hal sederhana mulai pulih'}]},
+  {id:'f4',label:'4',name:'Konsolidasi',range:'Bulan 6–12',color:'#BA7517',bg:'#FAEEDA',
+   items:[{id:'f4_1',text:'Capai streak 180 hari'},{id:'f4_2',text:'Buat Relapse Prevention Plan tertulis'},{id:'f4_3',text:'Bangun hubungan sehat penuh respek'},{id:'f4_4',text:'Tidak lagi memandang seseorang sebagai objek'},{id:'f4_5',text:'Tidur berkualitas, energi stabil'},{id:'f4_6',text:'Bantu orang lain yang berjuang'},{id:'f4_7',text:'Jika relapse: analisis, bangkit 24 jam'}]},
+  {id:'f5',label:'5',name:'Kehidupan Baru',range:'12 Bulan+',color:'#3B6D11',bg:'#EAF3DE',
+   items:[{id:'f5_1',text:'Capai 1 tahun streak'},{id:'f5_2',text:'Fungsi seksual kembali alami'},{id:'f5_3',text:'Rasa malu masa lalu sudah dimaafkan'},{id:'f5_4',text:'Identitas tidak terikat kecanduan lama'},{id:'f5_5',text:'Punya tujuan hidup yang dijalani'},{id:'f5_6',text:'PMO bukan opsi — pilihan sadar'},{id:'f5_7',text:'Pulih: relasi, karir, spiritualitas selaras'}]},
+];
+const URGE_DATA={
+  low:{fact:'Dorongan ringan = sinyal bukan perintah. Otak minta dopamin — berikan dari sumber sehat.',
+    actions:[{e:'🚶',t:'Jalan kaki 10 menit',d:'10 mnt'},{e:'📖',t:'Taruh HP, ambil buku',d:'5 mnt'},{e:'🎵',t:'Putar musik energik',d:'sekarang'},{e:'💧',t:'Minum segelas air',d:'1 mnt'},{e:'✏️',t:'Tulis di jurnal',d:'5 mnt'},{e:'📱',t:'Chat teman/keluarga',d:'bebas'}]},
+  med:{fact:'Dorongan sedang = aktivitas fisik adalah cara tercepat memutus siklus ini secara neurologis.',
+    actions:[{e:'💪',t:'Push-up 20 kali sekarang',d:'2 mnt'},{e:'🚿',t:'Mandi air dingin',d:'5 mnt'},{e:'🌬️',t:'Napas 4-7-8, 5 siklus',d:'4 mnt'},{e:'🏃',t:'Lari ringan keluar',d:'15 mnt'},{e:'🚪',t:'Pindah ruangan, tinggal HP',d:'sekarang'},{e:'🙏',t:'Sholat / doa / zikir',d:'10 mnt'}]},
+  high:{fact:'DARURAT — Satu keputusan tepat sekarang = satu hari streak diselamatkan. Keluar dari situasi ini.',
+    actions:[{e:'🏃',t:'Lari sekencangnya',d:'10 mnt'},{e:'🚿',t:'Mandi air dingin langsung',d:'sekarang'},{e:'📞',t:'Telepon orang terpercaya',d:'sekarang'},{e:'🚪',t:'Keluar dari kamar',d:'sekarang'},{e:'📵',t:'Matikan HP, simpan di laci',d:'sekarang'},{e:'❤️',t:'Ingat alasanmu berhenti',d:'1 mnt'}]},
+};
+const DEFAULT_AFIRMASI=[
+  'Setiap hari bebas adalah kemenangan nyata.',
+  'Kamu lebih kuat dari dorongan yang kamu rasakan.',
+  'Otakmu sedang sembuh. Beri dia waktu.',
+  'Kamu bukan kecanduan itu. Kamu adalah orang yang pulih.',
+  'Masa depanmu lebih berharga dari kenikmatan sesaat.',
+  'Setiap streak yang kamu jaga membangun identitas barumu.',
+  'Kamu layak mendapatkan kehidupan yang lebih baik.',
+];
+
+// ─── STATE ───────────────────────────────────────────────────
+let S=JSON.parse(localStorage.getItem('pulih_v2')||'{}');
+function d(k,v){if(S[k]===undefined)S[k]=v;}
+d('startDate',null);d('lastCheckin',null);d('bestStreak',0);
+d('totalCheckin',0);d('urgeWon',0);d('journals',[]);
+d('urgeHistory',[]);d('targets',{});d('relapses',[]);
+d('alasan',[]);d('afirmasi',[...DEFAULT_AFIRMASI]);
+d('zona',[]);d('freezeCount',2);d('freezeLastReset',null);
+d('notifEnabled',false);d('notifTime','08:00');
+function save(){localStorage.setItem('pulih_v2',JSON.stringify(S));}
+
+// ─── STREAK ──────────────────────────────────────────────────
+function getStreak(){
+  if(!S.startDate)return 0;
+  return Math.floor((Date.now()-new Date(S.startDate).getTime())/86400000);
+}
+function brainPct(d){
+  if(d<=0)return 0;if(d>=365)return 100;
+  const p=d/365;return Math.round(p<0.25?p*160:40+(p-0.25)*80);
+}
+function getPhase(d){
+  if(d<30)return'Fase 1 — Detoks';
+  if(d<90)return'Fase 2 — Fondasi';
+  if(d<180)return'Fase 3 — Rewiring';
+  if(d<365)return'Fase 4 — Konsolidasi';
+  return'Fase 5 — Pulih';
+}
+function nextMs(d){for(const m of MILESTONES){if(m.day>d)return m;}return null;}
+
+function checkIn(){
+  const today=new Date().toDateString();
+  if(S.lastCheckin===today){toast('Sudah check-in hari ini!');return;}
+  if(!S.startDate)S.startDate=new Date().toISOString();
+  S.lastCheckin=today;S.totalCheckin++;
+  const d=getStreak();if(d>S.bestStreak)S.bestStreak=d;
+  save();renderHome();toast('Check-in berhasil! Hari ke-'+d);
+  scheduleNotif();
+}
+function confirmReset(){
+  if(confirm('Reset streak ke 0?\nJurnal dan target tidak terhapus.')){
+    const d=getStreak();if(d>S.bestStreak)S.bestStreak=d;
+    S.startDate=new Date().toISOString();S.lastCheckin=null;
+    save();renderHome();toast('Streak direset. Bangkit lagi!');
+  }
+}
+
+// STREAK FREEZE
+function checkFreezeReset(){
+  const now=new Date();
+  const last=S.freezeLastReset?new Date(S.freezeLastReset):null;
+  if(!last||now.getMonth()!==last.getMonth()||now.getFullYear()!==last.getFullYear()){
+    S.freezeCount=2;S.freezeLastReset=now.toISOString();save();
+  }
+}
+function useFreeze(){
+  checkFreezeReset();
+  if(S.freezeCount<=0){toast('Tidak ada freeze tersisa bulan ini');return;}
+  if(!confirm('Gunakan 1 streak freeze?\nStreak tidak akan direset hari ini.\nSisa: '+(S.freezeCount-1)+' setelah ini'))return;
+  S.freezeCount--;
+  if(!S.startDate)S.startDate=new Date(Date.now()-86400000).toISOString();
+  S.startDate=new Date(new Date(S.startDate).getTime()-86400000).toISOString();
+  save();renderHome();toast('Freeze digunakan! Sisa: '+S.freezeCount);
+}
+
+// ─── HOME ─────────────────────────────────────────────────────
+function renderHome(){
+  checkFreezeReset();
+  const d=getStreak();
+  document.getElementById('streak-num').textContent=d;
+  document.getElementById('streak-phase').textContent=getPhase(d);
+  document.getElementById('freeze-count').textContent=S.freezeCount;
+  const bp=brainPct(d);
+  document.getElementById('brain-pct').textContent=bp+'%';
+  document.getElementById('brain-bar').style.width=bp+'%';
+  document.getElementById('total-checkin').textContent=S.totalCheckin;
+  document.getElementById('urge-won').textContent=S.urgeWon;
+  const nm=nextMs(d);
+  if(nm){
+    document.getElementById('next-ms-days').textContent=nm.day-d;
+    document.getElementById('next-ms-label').textContent='hari ke-'+nm.day;
+  } else {
+    document.getElementById('next-ms-days').textContent='✓';
+    document.getElementById('next-ms-label').textContent='semua tercapai';
+  }
+  // milestones
+  const ml=document.getElementById('milestone-list');ml.innerHTML='';
+  MILESTONES.forEach((m,i)=>{
+    const reached=d>=m.day;
+    const isNext=!reached&&(i===0||d>=MILESTONES[i-1].day);
+    const el=document.createElement('div');el.className='milestone-item';
+    const dc=reached?'done':isNext?'next':'future';
+    const icon=reached?'✓':isNext?'→':'·';
+    const bc=reached?'done':isNext?'next':'future';
+    el.innerHTML=`<div class="ms-dot ${dc}">${icon}</div><div class="ms-info"><div class="ms-day">Hari ke-${m.day}</div><div class="ms-title">${m.title}</div><span class="ms-badge ${bc}">${reached?'Tercapai':isNext?'Berikutnya':'Belum'} · ${m.badge}</span></div>`;
+    ml.appendChild(el);
+  });
+  // afirmasi
+  const af=S.afirmasi.length?S.afirmasi[new Date().getDate()%S.afirmasi.length]:DEFAULT_AFIRMASI[0];
+  document.getElementById('afirmasi-text').textContent=af;
+  document.getElementById('afirmasi-date').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'});
+  // zona merah check
+  checkZona();
+}
+
+// ─── ZONA MERAH ───────────────────────────────────────────────
+function checkZona(){
+  const now=new Date();
+  const hm=now.getHours()*60+now.getMinutes();
+  const alert=document.getElementById('zona-alert');
+  const sub=document.getElementById('zona-alert-sub');
+  let active=null;
+  S.zona.forEach(z=>{
+    const [h,m]=z.time.split(':').map(Number);
+    const zm=h*60+m;
+    if(hm>=zm&&hm<zm+120)active=z;
+  });
+  if(active){alert.classList.add('show');sub.textContent=active.desc+' — waspada dan aktifkan Tameng.';}
+  else alert.classList.remove('show');
+}
+
+// ─── JOURNAL ─────────────────────────────────────────────────
+let selMood='';
+function selectMood(m,btn){
+  selMood=m;
+  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function saveJournal(){
+  const txt=document.getElementById('journal-text').value.trim();
+  if(!selMood&&!txt){toast('Pilih mood atau tulis sesuatu');return;}
+  S.journals.unshift({date:new Date().toISOString(),mood:selMood||'📝',text:txt,streak:getStreak()});
+  if(S.journals.length>300)S.journals.pop();
+  save();
+  document.getElementById('journal-text').value='';selMood='';
+  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('sel'));
+  renderJournal();toast('Catatan tersimpan');
+}
+const MOOD_SCORE={'😊':5,'💪':5,'😌':4,'😐':3,'😔':2,'😰':2,'😤':2,'🔥':1,'📝':3};
+function renderJournal(){
+  renderMoodChart();
+  const c=document.getElementById('journal-entries');
+  const e=document.getElementById('je-empty');
+  if(!S.journals.length){e.style.display='block';c.innerHTML='';c.appendChild(e);return;}
+  e.style.display='none';c.innerHTML='';
+  S.journals.slice(0,50).forEach(j=>{
+    const el=document.createElement('div');el.className='journal-entry';
+    const dt=new Date(j.date).toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    el.innerHTML=`<div class="je-header"><span class="je-mood">${j.mood}</span><span class="je-date">${dt}</span><span class="je-streak-badge">Hari ke-${j.streak}</span></div>${j.text?`<div class="je-text">${j.text}</div>`:''}`;
+    c.appendChild(el);
+  });
+}
+function renderMoodChart(){
+  const wrap=document.getElementById('mood-chart');wrap.innerHTML='';
+  const days=30;const now=new Date();
+  for(let i=days-1;i>=0;i--){
+    const d=new Date(now);d.setDate(d.getDate()-i);
+    const ds=d.toDateString();
+    const entries=S.journals.filter(j=>new Date(j.date).toDateString()===ds);
+    const score=entries.length?Math.round(entries.reduce((a,j)=>a+(MOOD_SCORE[j.mood]||3),0)/entries.length):0;
+    const colors=['','#E24B4A','#BA7517','#888780','#1D9E75','#534AB7'];
+    const pct=score?score/5*100:0;
+    const col=document.createElement('div');col.className='mood-bar-c';
+    const lbl=i%7===0?d.getDate():'';
+    col.innerHTML=`<div class="mood-bar-v" style="height:${pct}%;background:${colors[score]||'var(--gray-light)'}"></div><div class="mood-bar-l">${lbl}</div>`;
+    wrap.appendChild(col);
+  }
+}
+
+// ─── TAMENG ───────────────────────────────────────────────────
+let urgeLevel=null;const urgeDone={};
+let timerSec=1200,timerRun=false,timerInt=null;
+
+function setUrge(l){
+  urgeLevel=l;
+  ['low','med','high'].forEach(x=>document.getElementById('ul-'+x).className='urge-lvl-btn');
+  document.getElementById('ul-'+l).classList.add('sel-'+l);
+  document.getElementById('urge-fact').innerHTML=`<p>${URGE_DATA[l].fact}</p>`;
+  const ac=document.getElementById('urge-actions');ac.innerHTML='';
+  URGE_DATA[l].actions.forEach((a,i)=>{
+    const id='u_'+l+'_'+i;
+    const el=document.createElement('div');
+    el.className='urge-action'+(urgeDone[id]?' ticked':'');
+    el.onclick=()=>{urgeDone[id]=!urgeDone[id];if(urgeDone[id]){S.urgeWon++;save();renderHome();}else if(S.urgeWon>0){S.urgeWon--;save();}el.classList.toggle('ticked',urgeDone[id]);};
+    el.innerHTML=`<div class="ua-icon">${a.e}</div><div class="ua-title">${a.t}</div><div class="ua-time">${a.d}</div>`;
+    ac.appendChild(el);
+  });
+  // show alasan if high
+  if(l==='high'&&S.alasan.length)showAlasan();
+}
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function timerToggle(){
+  if(timerRun){clearInterval(timerInt);timerRun=false;document.getElementById('tbtn-start').textContent='Lanjutkan';return;}
+  timerRun=true;document.getElementById('tbtn-start').textContent='Jeda';
+  timerInt=setInterval(()=>{
+    if(timerSec<=0){clearInterval(timerInt);timerRun=false;
+      document.getElementById('urge-timer').textContent='00:00';
+      document.getElementById('timer-msg').textContent='Dorongan sudah berlalu! Streak aman.';
+      document.getElementById('tbtn-start').textContent='Selesai';
+      const e={date:new Date().toISOString(),level:urgeLevel||'low',streak:getStreak()};
+      S.urgeHistory.unshift(e);if(S.urgeHistory.length>100)S.urgeHistory.pop();
+      S.urgeWon++;save();renderHome();renderUrgeHistory();return;}
+    timerSec--;document.getElementById('urge-timer').textContent=fmt(timerSec);
+    document.getElementById('timer-msg').textContent='Bertahan... '+Math.round((1200-timerSec)/12)+'% dorongan dilalui';
+  },1000);
+}
+function timerReset(){
+  clearInterval(timerInt);timerRun=false;timerSec=1200;
+  document.getElementById('urge-timer').textContent='20:00';
+  document.getElementById('timer-msg').textContent='Tahan 20 menit — dorongan akan reda sendiri';
+  document.getElementById('tbtn-start').textContent='Mulai';
+}
+function renderUrgeHistory(){
+  const c=document.getElementById('urge-history-list');c.innerHTML='';
+  if(!S.urgeHistory.length){c.innerHTML='<div style="font-size:13px;color:var(--text3);text-align:center;padding:20px">Belum ada tameng yang tercatat</div>';return;}
+  S.urgeHistory.slice(0,15).forEach(u=>{
+    const el=document.createElement('div');el.className='urge-log-item';
+    const dt=new Date(u.date).toLocaleDateString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    const lbl={low:'Ringan',med:'Sedang',high:'Kuat'};
+    el.innerHTML=`<span class="ul-badge ul-${u.level||'low'}">${lbl[u.level||'low']}</span><span style="font-size:13px;color:var(--text2)">Hari ke-${u.streak}</span><span class="ul-date">${dt}</span>`;
+    c.appendChild(el);
+  });
+}
+
+// ─── BREATHING 4-7-8 ─────────────────────────────────────────
+let breathRunning=false,breathPhase=0,breathTimer=null,breathCycle=0,breathSec=0;
+const BREATH_PHASES=['Tarik napas','Tahan','Hembuskan'];
+const BREATH_DUR=[4,7,8];
+const BREATH_CLASS=['inhale','hold','exhale'];
+
+function breathToggle(){
+  if(breathRunning){clearInterval(breathTimer);breathRunning=false;document.getElementById('breath-btn').textContent='Mulai Napas';return;}
+  breathRunning=true;document.getElementById('breath-btn').textContent='Berhenti';
+  runBreathPhase();
+}
+function runBreathPhase(){
+  if(!breathRunning)return;
+  if(breathCycle>=5){breathReset();toast('Napas selesai! 5 siklus dilakukan.');return;}
+  const ring=document.getElementById('breath-ring');
+  const phase=document.getElementById('breath-phase');
+  const count=document.getElementById('breath-count');
+  const cycle=document.getElementById('breath-cycle');
+  ring.className='breath-ring '+BREATH_CLASS[breathPhase];
+  phase.textContent=BREATH_PHASES[breathPhase];
+  breathSec=BREATH_DUR[breathPhase];
+  count.textContent=breathSec;
+  cycle.textContent='Siklus: '+breathCycle+'/5';
+  clearInterval(breathTimer);
+  breathTimer=setInterval(()=>{
+    breathSec--;count.textContent=breathSec;
+    if(breathSec<=0){
+      clearInterval(breathTimer);
+      breathPhase=(breathPhase+1)%3;
+      if(breathPhase===0)breathCycle++;
+      runBreathPhase();
+    }
+  },1000);
+}
+function breathReset(){
+  clearInterval(breathTimer);breathRunning=false;breathPhase=0;breathCycle=0;breathSec=0;
+  document.getElementById('breath-btn').textContent='Mulai Napas';
+  document.getElementById('breath-ring').className='breath-ring';
+  document.getElementById('breath-phase').textContent='Siap';
+  document.getElementById('breath-count').textContent='—';
+  document.getElementById('breath-cycle').textContent='Siklus: 0/5';
+}
+
+// ─── PROGRESS ─────────────────────────────────────────────────
+function renderProgress(){
+  const c=document.getElementById('phases-checklist');c.innerHTML='';
+  let total=0,done=0;
+  PHASES.forEach(p=>{
+    let pd=0;
+    p.items.forEach(it=>{total++;if(S.targets[it.id]){done++;pd++;}});
+    const pct=Math.round(pd/p.items.length*100);
+    const card=document.createElement('div');card.className='card';card.style.marginBottom='8px';
+    card.innerHTML=`<div class="phase-header-row"><div class="phase-dot-small" style="background:${p.bg};color:${p.color}">${p.label}</div><div class="phase-name" style="color:${p.color}">${p.name}</div><div class="phase-range">${p.range}</div></div><div class="phase-prog-text">${pd}/${p.items.length} · ${pct}%</div><div class="recov-bar-wrap" style="margin-bottom:8px"><div class="recov-bar" style="width:${pct}%;background:${p.color}"></div></div>`;
+    p.items.forEach(it=>{
+      const row=document.createElement('div');row.className='target-item';
+      const chk=S.targets[it.id];
+      row.innerHTML=`<div class="target-check${chk?' done':''}" onclick="toggleTarget('${it.id}',this)">${chk?'✓':''}</div><div class="target-text${chk?' done':''}">${it.text}</div>`;
+      card.appendChild(row);
+    });
+    c.appendChild(card);
+  });
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('total-progress-bar').style.width=pct+'%';
+  document.getElementById('total-progress-pct').textContent=pct+'%';
+  renderRelapses();
+}
+function toggleTarget(id,el){
+  S.targets[id]=!S.targets[id];save();
+  el.className='target-check'+(S.targets[id]?' done':'');
+  el.textContent=S.targets[id]?'✓':'';
+  el.nextElementSibling.className='target-text'+(S.targets[id]?' done':'');
+  if(S.targets[id])toast('Target dicapai!');
+  renderProgress();
+}
+
+// RELAPSE TRACKER
+function saveRelapse(){
+  const cause=document.getElementById('relapse-cause').value.trim();
+  const lesson=document.getElementById('relapse-lesson').value.trim();
+  if(!cause){toast('Tulis situasi penyebabnya');return;}
+  S.relapses.unshift({date:new Date().toISOString(),streak:getStreak(),cause,lesson});
+  if(S.relapses.length>50)S.relapses.pop();
+  const d=getStreak();if(d>S.bestStreak)S.bestStreak=d;
+  S.startDate=new Date().toISOString();S.lastCheckin=null;
+  save();
+  document.getElementById('relapse-cause').value='';
+  document.getElementById('relapse-lesson').value='';
+  renderProgress();renderHome();
+  toast('Dicatat. Bangkit lagi — kamu kuat!');
+}
+function renderRelapses(){
+  const c=document.getElementById('relapse-list');c.innerHTML='';
+  if(!S.relapses.length){c.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:10px 0">Belum ada relapse yang dicatat.</div>';return;}
+  S.relapses.slice(0,10).forEach(r=>{
+    const el=document.createElement('div');el.className='relapse-entry';
+    const dt=new Date(r.date).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+    el.innerHTML=`<div class="re-header"><span class="re-date">${dt}</span><span class="re-streak">Streak: ${r.streak} hari</span></div><div class="re-text">${r.cause}</div>${r.lesson?`<div class="re-lesson">Pelajaran: ${r.lesson}</div>`:''}`;
+    c.appendChild(el);
+  });
+}
+
+// ─── SETTINGS ─────────────────────────────────────────────────
+function renderSettings(){
+  const d=getStreak();
+  document.getElementById('start-date-display').textContent=S.startDate?new Date(S.startDate).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}):'Belum dimulai';
+  document.getElementById('best-streak-display').textContent=Math.max(S.bestStreak,d)+' hari';
+  document.getElementById('relapse-count-display').textContent=S.relapses.length+' kali';
+  document.getElementById('freeze-settings-count').textContent=S.freezeCount;
+  const dt=document.getElementById('dark-toggle');if(dt)dt.classList.toggle('on',document.body.classList.contains('dark'));
+  const pt=document.getElementById('pin-toggle');if(pt){const hasPin=!!localStorage.getItem('pulih_pin');pt.classList.toggle('on',hasPin);document.getElementById('pin-status-sub').textContent=hasPin?'Aktif':'Tidak aktif';}
+  const nt=document.getElementById('notif-toggle');if(nt)nt.classList.toggle('on',S.notifEnabled);
+  const ntime=document.getElementById('notif-time');if(ntime&&S.notifTime)ntime.value=S.notifTime;
+  renderAlasanList();renderAfirmasiList();renderZonaList();
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='pulih_v2_'+new Date().toISOString().slice(0,10)+'.json';a.click();toast('Data diekspor!');
+}
+function confirmFullReset(){
+  if(confirm('HAPUS SEMUA DATA?\nTidak bisa dibatalkan.')){
+    localStorage.clear();location.reload();
+  }
+}
+
+// ALASAN
+function renderAlasanList(){
+  const c=document.getElementById('alasan-list');c.innerHTML='';
+  if(!S.alasan.length){c.innerHTML='<div style="font-size:13px;color:var(--text3);padding:8px 0">Belum ada. Tambahkan alasanmu.</div>';return;}
+  S.alasan.forEach((a,i)=>{
+    const el=document.createElement('div');el.className='list-item-row';
+    el.innerHTML=`<div class="list-num">${i+1}</div><div class="list-item-text">${a}</div><button class="list-delete" onclick="deleteAlasan(${i})">×</button>`;
+    c.appendChild(el);
+  });
+}
+function addAlasan(){
+  const v=document.getElementById('alasan-input').value.trim();
+  if(!v){toast('Tulis alasanmu dulu');return;}
+  if(S.alasan.length>=10){toast('Maksimal 10 alasan');return;}
+  S.alasan.push(v);save();document.getElementById('alasan-input').value='';renderAlasanList();toast('Alasan ditambahkan');
+}
+function deleteAlasan(i){S.alasan.splice(i,1);save();renderAlasanList();}
+function showAlasan(){
+  const list=document.getElementById('alasan-popup-list');list.innerHTML='';
+  const items=S.alasan.length?S.alasan:['Kamu belum menambahkan alasan. Tambahkan di Setelan.'];
+  items.forEach((a,i)=>{
+    const el=document.createElement('div');el.className='ap-item';
+    el.innerHTML=`<div class="ap-num">${i+1}</div><div class="ap-text">${a}</div>`;
+    list.appendChild(el);
+  });
+  document.getElementById('alasan-overlay').classList.add('show');
+}
+
+// AFIRMASI
+function renderAfirmasiList(){
+  const c=document.getElementById('afirmasi-list');c.innerHTML='';
+  S.afirmasi.slice(0,5).forEach((a,i)=>{
+    const el=document.createElement('div');el.className='list-item-row';
+    el.innerHTML=`<div class="list-num">${i+1}</div><div class="list-item-text" style="font-size:13px">${a}</div><button class="list-delete" onclick="deleteAfirmasi(${i})">×</button>`;
+    c.appendChild(el);
+  });
+  if(S.afirmasi.length>5){const more=document.createElement('div');more.style='font-size:12px;color:var(--text3);padding:6px 0';more.textContent='+'+(S.afirmasi.length-5)+' afirmasi lagi';c.appendChild(more);}
+}
+function addAfirmasi(){
+  const v=document.getElementById('afirmasi-input').value.trim();
+  if(!v)return;
+  S.afirmasi.unshift(v);if(S.afirmasi.length>20)S.afirmasi.pop();
+  save();document.getElementById('afirmasi-input').value='';renderAfirmasiList();toast('Afirmasi ditambahkan');
+}
+function deleteAfirmasi(i){S.afirmasi.splice(i,1);if(!S.afirmasi.length)S.afirmasi=[...DEFAULT_AFIRMASI];save();renderAfirmasiList();}
+
+// ZONA MERAH
+function renderZonaList(){
+  const c=document.getElementById('zona-list');c.innerHTML='';
+  if(!S.zona.length){c.innerHTML='<div style="font-size:13px;color:var(--text3);padding:8px 0">Belum ada zona merah.</div>';return;}
+  S.zona.forEach((z,i)=>{
+    const el=document.createElement('div');el.className='list-item-row';
+    el.innerHTML=`<div style="font-size:13px;font-weight:600;color:var(--red-dark);background:var(--red-light);padding:3px 10px;border-radius:8px;flex-shrink:0">${z.time}</div><div class="list-item-text" style="font-size:13px">${z.desc}</div><button class="list-delete" onclick="deleteZona(${i})">×</button>`;
+    c.appendChild(el);
+  });
+}
+function addZona(){
+  const time=document.getElementById('zona-start').value;
+  const desc=document.getElementById('zona-desc').value.trim();
+  if(!time||!desc){toast('Isi jam dan deskripsi');return;}
+  if(S.zona.length>=5){toast('Maksimal 5 zona merah');return;}
+  S.zona.push({time,desc});save();
+  document.getElementById('zona-start').value='';document.getElementById('zona-desc').value='';
+  renderZonaList();toast('Zona merah ditambahkan');
+}
+function deleteZona(i){S.zona.splice(i,1);save();renderZonaList();}
+
+// NOTIFIKASI
+function toggleNotif(){
+  if(!S.notifEnabled){
+    if('Notification' in window){
+      Notification.requestPermission().then(p=>{
+        if(p==='granted'){S.notifEnabled=true;save();document.getElementById('notif-toggle').classList.add('on');toast('Notifikasi aktif!');}
+        else toast('Izin notifikasi ditolak');
+      });
+    } else toast('Browser tidak mendukung notifikasi');
+  } else {
+    S.notifEnabled=false;save();document.getElementById('notif-toggle').classList.remove('on');toast('Notifikasi dimatikan');
+  }
+}
+function scheduleNotif(){
+  const t=document.getElementById('notif-time');
+  if(t)S.notifTime=t.value;
+  save();
+}
+function testNotif(){
+  if('Notification' in window&&Notification.permission==='granted'){
+    new Notification('Pulih — Check-in!',{body:'Hari ke-'+getStreak()+' — jangan lupa check-in hari ini.',icon:'./icons/icon-192.png'});
+  } else toast('Aktifkan notifikasi dulu di pengaturan');
+}
+
+// DARK MODE
+function toggleDark(){
+  const dark=document.body.classList.toggle('dark');
+  localStorage.setItem('pulih_dark',dark?'1':'0');
+  document.getElementById('dark-toggle').classList.toggle('on',dark);
+  document.getElementById('theme-meta').content=dark?'#111110':'#534AB7';
+}
+function initDark(){
+  const saved=localStorage.getItem('pulih_dark');
+  const sys=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  if(saved!==null?saved==='1':sys){
+    document.body.classList.add('dark');
+    document.getElementById('theme-meta').content='#111110';
+  }
+}
+
+// PIN LOCK
+let pinInput='';let pinMode='unlock';
+function initPin(){
+  const pin=localStorage.getItem('pulih_pin');
+  if(pin){document.getElementById('pin-screen').classList.add('show');pinMode='unlock';}
+}
+function pinKey(k){
+  if(k==='del'){pinInput=pinInput.slice(0,-1);}
+  else if(k==='ok'){verifyPin();}
+  else if(pinInput.length<4){pinInput+=k;}
+  updatePinDots();
+  if(pinInput.length===4&&pinMode!=='set')verifyPin();
+}
+function updatePinDots(){
+  for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.toggle('filled',i<pinInput.length);
+}
+function verifyPin(){
+  const pin=localStorage.getItem('pulih_pin');
+  if(pinInput===pin){
+    document.getElementById('pin-screen').classList.remove('show');
+    document.getElementById('pin-error').textContent='';
+    pinInput='';updatePinDots();
+  } else {
+    document.getElementById('pin-error').textContent='PIN salah, coba lagi';
+    pinInput='';updatePinDots();
+  }
+}
+function togglePin(){
+  const hasPin=!!localStorage.getItem('pulih_pin');
+  if(hasPin){if(confirm('Hapus PIN lock?')){localStorage.removeItem('pulih_pin');document.getElementById('pin-toggle').classList.remove('on');document.getElementById('pin-status-sub').textContent='Tidak aktif';document.getElementById('pin-setup-area').style.display='none';toast('PIN dihapus');}}
+  else{document.getElementById('pin-setup-area').style.display='block';}
+}
+function savePin(){
+  const v=document.getElementById('pin-new-input').value.trim();
+  if(v.length!==4||!/^\d{4}$/.test(v)){toast('PIN harus 4 angka');return;}
+  localStorage.setItem('pulih_pin',v);
+  document.getElementById('pin-toggle').classList.add('on');
+  document.getElementById('pin-status-sub').textContent='Aktif';
+  document.getElementById('pin-setup-area').style.display='none';
+  document.getElementById('pin-new-input').value='';
+  toast('PIN disimpan!');
+}
+
+// NAV + TOAST
+function goTo(pg){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('pg-'+pg).classList.add('active');
+  document.getElementById('nav-'+pg).classList.add('active');
+  if(pg==='home')renderHome();
+  if(pg==='journal')renderJournal();
+  if(pg==='urge')renderUrgeHistory();
+  if(pg==='progress')renderProgress();
+  if(pg==='settings')renderSettings();
+  window.scrollTo(0,0);
+}
+function toast(msg,dur=2500){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+// INIT
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+initDark();initPin();renderHome();
+// zona check setiap menit
+setInterval(checkZona,60000);
+</script>
+</body>
+</html>
