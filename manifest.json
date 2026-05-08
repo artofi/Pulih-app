@@ -2,8 +2,8 @@
   "name": "Pulih - Recovery Tracker",
   "short_name": "Pulih",
   "description": "Aplikasi pemulihan pribadi — streak tracker, jurnal suasana, tameng dorongan, target pemulihan. Offline, privat, aman.",
-  "start_url": "/pulih-app/index.html",
-  "scope": "/pulih-app/",
+  "start_url": "/Pulih-app/index.html",
+  "scope": "/Pulih-app/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#534AB7",
@@ -30,14 +30,14 @@
       "name": "Tameng SOS",
       "short_name": "Tameng",
       "description": "Buka toolkit tameng dorongan darurat",
-      "url": "/pulih-app/index.html",
+      "url": "/Pulih-app/index.html",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Jurnal Suasana",
       "short_name": "Jurnal",
       "description": "Catat suasana hatimu hari ini",
-      "url": "/index.html",
+      "url": "/Pulih-app/index.html",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     }
   ],
