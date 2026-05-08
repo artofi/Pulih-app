@@ -16,9 +16,7 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS))
-  );
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
   self.skipWaiting();
 });
 
@@ -43,4 +41,71 @@ self.addEventListener('fetch', e => {
       }).catch(() => caches.match('./index.html'));
     })
   );
+});
+
+// PUSH NOTIFICATION dari SW
+self.addEventListener('push', e => {
+  const data = e.data ? e.data.json() : {};
+  const title = data.title || 'Pulih — Reminder';
+  const options = {
+    body: data.body || 'Jangan lupa check-in hari ini!',
+    icon: './icons/icon-192.png',
+    badge: './icons/icon-96.png',
+    vibrate: [200, 100, 200],
+    tag: 'pulih-reminder',
+    renotify: true,
+    data: { url: self.registration.scope }
+  };
+  e.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Klik notifikasi → buka app
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) {
+        if (c.url.includes('Pulih-app') && 'focus' in c) return c.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(e.notification.data.url || './');
+    })
+  );
+});
+
+// PERIODIC BACKGROUND SYNC (untuk reminder harian)
+self.addEventListener('periodicsync', e => {
+  if (e.tag === 'pulih-daily-reminder') {
+    e.waitUntil(sendDailyReminder());
+  }
+});
+
+async function sendDailyReminder() {
+  const allClients = await clients.matchAll();
+  // Cek apakah app sedang dibuka — kalau tidak, kirim notifikasi
+  if (allClients.length === 0) {
+    await self.registration.showNotification('Pulih — Check-in Harian', {
+      body: 'Sudahkah kamu check-in hari ini? Jaga streakmu tetap hidup!',
+      icon: './icons/icon-192.png',
+      badge: './icons/icon-96.png',
+      vibrate: [200, 100, 200],
+      tag: 'pulih-daily',
+      data: { url: self.registration.scope }
+    });
+  }
+}
+
+// MESSAGE dari halaman utama → kirim notifikasi
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SHOW_NOTIFICATION') {
+    const { title, body } = e.data;
+    self.registration.showNotification(title || 'Pulih', {
+      body: body || 'Jangan lupa check-in hari ini!',
+      icon: './icons/icon-192.png',
+      badge: './icons/icon-96.png',
+      vibrate: [200, 100, 200],
+      tag: 'pulih-reminder',
+      renotify: true,
+      data: { url: self.registration.scope }
+    });
+  }
 });
