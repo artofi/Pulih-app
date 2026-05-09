@@ -239,6 +239,54 @@ body.dark .pin-key{background:#2a2a27;border-color:#3a3a36}
 body.dark .streak-hero{background:#3C3489}
 body.dark .sec-btn{background:#2a2a27;color:#f0efe8}
 body.dark .afirmasi-card{background:#3C3489}
+/* PANIC BUTTON */
+.panic-btn{width:100%;padding:22px;background:var(--red);color:#fff;border:none;border-radius:16px;font-size:18px;font-weight:800;cursor:pointer;margin-bottom:12px;letter-spacing:.3px}
+.panic-btn:active{transform:scale(.98);opacity:.93}
+/* CHECK-IN MODAL */
+#checkin-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:800;align-items:flex-end;justify-content:center}
+#checkin-modal.show{display:flex}
+.checkin-sheet{background:var(--card);border-radius:20px 20px 0 0;padding:28px 24px 44px;width:100%;max-width:480px}
+.checkin-sheet h3{font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px}
+.checkin-sheet p{font-size:13px;color:var(--text2);margin-bottom:16px}
+/* EMERGENCY CONTACT */
+.contact-call-btn{width:100%;padding:16px;background:var(--teal);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px}
+/* WEEKLY REPORT */
+.week-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.week-stat{background:var(--gray-light);border-radius:var(--radius-sm);padding:12px 8px;text-align:center}
+.week-stat-val{font-size:22px;font-weight:700;color:var(--text)}
+.week-stat-label{font-size:10px;color:var(--text3);margin-top:2px}
+.week-day-row{display:flex;gap:3px;margin-bottom:4px}
+.wdd{flex:1;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600}
+.wdd-clean{background:var(--teal-light);color:var(--teal-dark)}
+.wdd-relapse{background:var(--red-light);color:var(--red-dark)}
+.wdd-empty{background:var(--gray-light);color:var(--text3)}
+/* HABIT STACKING */
+.habit-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--gray-light)}
+.habit-item:last-child{border-bottom:none}
+.habit-check{width:28px;height:28px;border-radius:8px;border:2px solid var(--gray-border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:14px;background:var(--card)}
+.habit-check.done{background:var(--teal);border-color:var(--teal);color:#fff}
+.habit-info{flex:1}
+.habit-name{font-size:14px;font-weight:500;color:var(--text)}
+.habit-streak{font-size:11px;color:var(--text3);margin-top:1px}
+.habit-pts{font-size:11px;font-weight:700;color:var(--amber-dark);background:var(--amber-light);padding:2px 8px;border-radius:8px;flex-shrink:0}
+/* PESAN DIRI */
+.pesan-card{background:var(--purple-light);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px;border-left:3px solid var(--purple)}
+.pesan-date{font-size:11px;color:var(--text3);margin-bottom:4px}
+.pesan-text{font-size:14px;color:var(--text);line-height:1.6;font-style:italic}
+/* TRIGGER ANALYSIS */
+.trigger-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-light)}
+.trigger-row:last-child{border-bottom:none}
+.trigger-emoji{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.trigger-info{flex:1}
+.trigger-label{font-size:13px;font-weight:500;color:var(--text)}
+.trigger-count{font-size:11px;color:var(--text3)}
+.trigger-bar-wrap{width:70px;background:var(--gray-light);border-radius:4px;height:5px;overflow:hidden}
+.trigger-bar-fill{height:100%;border-radius:4px;background:var(--red)}
+body.dark .checkin-sheet{background:#1c1c1a}
+body.dark .week-stat{background:#2a2a27}
+body.dark .habit-check{background:#1c1c1a;border-color:#3a3a36}
+body.dark .pesan-card{background:#26215C;border-left-color:#7F77DD}
+body.dark .pesan-text{color:#CECBF6}
 </style>
 </head>
 <body>
@@ -268,6 +316,18 @@ body.dark .afirmasi-card{background:#3C3489}
   </div>
 </div>
 
+<!-- CHECK-IN MODAL -->
+<div id="checkin-modal">
+  <div class="checkin-sheet">
+    <h3>Check-in Hari Ini</h3>
+    <p>Satu pertanyaan sebelum dicatat:</p>
+    <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:12px" id="checkin-question">Apa 1 hal baik yang kamu lakukan hari ini?</div>
+    <textarea id="checkin-answer" rows="3" placeholder="Tulis jawabanmu..."></textarea>
+    <button class="btn-primary" onclick="submitCheckin()" style="margin-top:12px">Simpan & Check-in</button>
+    <button class="sec-btn" style="margin-top:6px" onclick="document.getElementById('checkin-modal').classList.remove('show')">Lewati</button>
+  </div>
+</div>
+
 <!-- ALASAN OVERLAY -->
 <div id="alasan-overlay">
   <div class="alasan-popup">
@@ -284,6 +344,9 @@ body.dark .afirmasi-card{background:#3C3489}
     <strong>Zona Merah Aktif</strong>
     <span id="zona-alert-sub">Kamu sedang di jam berisiko. Waspada.</span>
   </div>
+
+  <!-- PANIC BUTTON -->
+  <button class="panic-btn" onclick="panicMode()">🆘 BUTUH BANTUAN SEKARANG</button>
   <div class="afirmasi-card" id="afirmasi-card">
     <div class="afirmasi-text" id="afirmasi-text">Setiap hari yang kamu pilih untuk bebas adalah kemenangan nyata.</div>
     <div class="afirmasi-date" id="afirmasi-date"></div>
@@ -325,6 +388,16 @@ body.dark .afirmasi-card{background:#3C3489}
   <div class="card">
     <div class="card-title">Milestone</div>
     <div id="milestone-list"></div>
+  </div>
+
+  <!-- HABIT STACKING -->
+  <div class="card">
+    <div class="card-title">Kebiasaan hari ini</div>
+    <div id="habit-list"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--gray-light)">
+      <span style="font-size:12px;color:var(--text3)">Poin terkumpul hari ini</span>
+      <span style="font-size:16px;font-weight:700;color:var(--amber-dark)" id="habit-points">0 pts</span>
+    </div>
   </div>
 </div>
 
@@ -427,6 +500,25 @@ body.dark .afirmasi-card{background:#3C3489}
 <div id="pg-settings" class="page">
   <div class="page-header"><h1>Pengaturan</h1><p>Privasi penuh — data hanya di perangkatmu</p></div>
 
+  <!-- KONTAK DARURAT -->
+  <div class="card">
+    <div class="card-title">Kontak darurat</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:10px">Hubungi langsung saat dorongan kuat datang</p>
+    <div id="contact-display"></div>
+    <label class="field-label">Nama</label>
+    <input type="text" id="contact-name" placeholder="misal: Kakak, Teman, Ustadz">
+    <label class="field-label">Nomor WhatsApp (format: 08xxx)</label>
+    <input type="text" id="contact-phone" placeholder="08123456789">
+    <button class="btn-primary" onclick="saveContact()">Simpan kontak</button>
+  </div>
+
+  <!-- PESAN DIRI -->
+  <div class="card">
+    <div class="card-title">Pesan untuk diri sendiri</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:10px">Tulis pesan dari dirimu sekarang untuk dibaca saat hampir relapse</p>
+    <button class="btn-primary" style="margin-top:0" onclick="goTo('pesan')">Buka & tulis pesan</button>
+  </div>
+
   <!-- ALASAN BERHENTI -->
   <div class="card">
     <div class="card-title">Alasan berhenti</div>
@@ -518,6 +610,41 @@ body.dark .afirmasi-card{background:#3C3489}
   <div style="text-align:center;padding:20px;font-size:12px;color:var(--text3)">Pulih v2.0 — semua data tersimpan lokal</div>
 </div>
 
+<!-- WEEKLY REPORT PAGE -->
+<div id="pg-report" class="page">
+  <div class="page-header"><h1>Laporan Mingguan</h1><p>Rekap 7 hari terakhir perjalananmu</p></div>
+  <div class="week-stat-grid" id="week-stats"></div>
+  <div class="card">
+    <div class="card-title">Status 7 hari terakhir</div>
+    <div class="week-day-row" id="week-day-row"></div>
+    <div style="display:flex;gap:12px;font-size:11px;color:var(--text3);margin-top:4px">
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--teal);display:inline-block"></span>Clean</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--red);display:inline-block"></span>Relapse</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--gray);display:inline-block"></span>Tidak dicatat</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Analisis trigger mood</div>
+    <div id="trigger-analysis"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Tren mood minggu ini</div>
+    <div class="mood-chart-row" id="week-mood-chart" style="height:80px"></div>
+  </div>
+</div>
+
+<!-- PESAN DIRI PAGE -->
+<div id="pg-pesan" class="page">
+  <div class="page-header"><h1>Pesan untuk Diri Sendiri</h1><p>Kata-kata dari kamu di hari pertama, untuk kamu di saat terberat</p></div>
+  <div class="card">
+    <div class="card-title">Tulis pesan sekarang</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:10px">Bayangkan kamu sedang di ambang relapse — apa yang ingin kamu sampaikan kepada dirimu sendiri saat ini?</p>
+    <textarea id="pesan-input" rows="5" placeholder="Hei, kamu yang sedang berjuang... Aku tahu ini berat. Tapi ingat..."></textarea>
+    <button class="btn-primary" onclick="savePesan()">Simpan pesan</button>
+  </div>
+  <div id="pesan-list"></div>
+</div>
+
 <!-- NAV -->
 <nav class="nav-bar">
   <button class="nav-item active" id="nav-home" onclick="goTo('home')">
@@ -532,9 +659,9 @@ body.dark .afirmasi-card{background:#3C3489}
     <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
     <span>Tameng</span>
   </button>
-  <button class="nav-item" id="nav-progress" onclick="goTo('progress')">
-    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-    <span>Target</span>
+  <button class="nav-item" id="nav-report" onclick="goTo('report')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    <span>Laporan</span>
   </button>
   <button class="nav-item" id="nav-settings" onclick="goTo('settings')">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -1146,12 +1273,14 @@ function goTo(pg){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('pg-'+pg).classList.add('active');
-  document.getElementById('nav-'+pg).classList.add('active');
-  if(pg==='home')renderHome();
+  const navEl=document.getElementById('nav-'+pg);if(navEl)navEl.classList.add('active');
+  if(pg==='home'){renderHome();renderHabits();}
   if(pg==='journal')renderJournal();
   if(pg==='urge')renderUrgeHistory();
   if(pg==='progress')renderProgress();
-  if(pg==='settings')renderSettings();
+  if(pg==='settings'){renderSettings();renderContactDisplay();}
+  if(pg==='report')renderReport();
+  if(pg==='pesan')renderPesan();
   window.scrollTo(0,0);
 }
 function toast(msg,dur=2500){
@@ -1159,13 +1288,189 @@ function toast(msg,dur=2500){
   setTimeout(()=>t.classList.remove('show'),dur);
 }
 
+// ─── PANIC BUTTON ────────────────────────────────────────────
+function panicMode(){
+  showAlasan();
+  setTimeout(()=>{goTo('urge');setUrge('high');if(!timerRun)timerToggle();},300);
+  toast('Mode darurat aktif — kamu kuat!',3000);
+}
+
+// ─── CHECK-IN WITH QUESTION ──────────────────────────────────
+const CHECKIN_QUESTIONS=['Apa 1 hal baik yang kamu lakukan hari ini?','Apa yang kamu syukuri hari ini?','Siapa yang kamu bantu atau hubungi hari ini?','Apa kemajuan kecil yang kamu buat hari ini?','Bagaimana kamu menjaga dirimu hari ini?'];
+function checkIn(){
+  const today=new Date().toDateString();
+  if(S.lastCheckin===today){toast('Sudah check-in hari ini!');return;}
+  document.getElementById('checkin-question').textContent=CHECKIN_QUESTIONS[new Date().getDay()%CHECKIN_QUESTIONS.length];
+  document.getElementById('checkin-answer').value='';
+  document.getElementById('checkin-modal').classList.add('show');
+}
+function submitCheckin(){
+  const answer=document.getElementById('checkin-answer').value.trim();
+  if(!S.startDate)S.startDate=new Date().toISOString();
+  S.lastCheckin=new Date().toDateString();S.totalCheckin++;
+  const d=getStreak();if(d>S.bestStreak)S.bestStreak=d;
+  if(answer)S.journals.unshift({date:new Date().toISOString(),mood:'✅',text:'Check-in: '+answer,streak:d});
+  resetHabitsIfNewDay();save();
+  document.getElementById('checkin-modal').classList.remove('show');
+  renderHome();renderHabits();
+  toast('Check-in berhasil! Hari ke-'+d);scheduleNotifLoop();
+}
+
+// ─── HABIT STACKING ──────────────────────────────────────────
+const DEFAULT_HABITS=[
+  {id:'h1',name:'Olahraga / jalan kaki',pts:3,icon:'🏃'},
+  {id:'h2',name:'Meditasi / zikir',pts:2,icon:'🙏'},
+  {id:'h3',name:'Tidur sebelum 23.00',pts:2,icon:'😴'},
+  {id:'h4',name:'Tidak pegang HP 1 jam pertama',pts:2,icon:'📵'},
+  {id:'h5',name:'Baca buku / belajar',pts:2,icon:'📖'},
+  {id:'h6',name:'Minum air 8 gelas',pts:1,icon:'💧'},
+  {id:'h7',name:'Hubungi orang terpercaya',pts:3,icon:'📞'},
+];
+function initHabits(){
+  if(!S.habits)S.habits=DEFAULT_HABITS.map(h=>({...h,done:false,streak:0}));
+  if(!S.habitLastReset)S.habitLastReset=null;save();
+}
+function resetHabitsIfNewDay(){
+  const today=new Date().toDateString();
+  if(S.habitLastReset!==today){
+    S.habitLastReset=today;
+    if(S.habits)S.habits.forEach(h=>{h.streak=h.done?(h.streak||0)+1:0;h.done=false;});
+    save();
+  }
+}
+function toggleHabit(id){
+  if(!S.habits)initHabits();
+  const h=S.habits.find(x=>x.id===id);if(!h)return;
+  h.done=!h.done;save();renderHabits();
+}
+function renderHabits(){
+  initHabits();resetHabitsIfNewDay();
+  const c=document.getElementById('habit-list');if(!c)return;
+  c.innerHTML='';let pts=0;
+  S.habits.forEach(h=>{
+    if(h.done)pts+=h.pts;
+    const el=document.createElement('div');el.className='habit-item';
+    el.innerHTML=`<div class="habit-check${h.done?' done':''}" onclick="toggleHabit('${h.id}')">${h.done?'✓':''}</div><div class="habit-info"><div class="habit-name">${h.icon} ${h.name}</div><div class="habit-streak">Streak: ${h.streak||0} hari</div></div><div class="habit-pts">+${h.pts}</div>`;
+    c.appendChild(el);
+  });
+  const pEl=document.getElementById('habit-points');if(pEl)pEl.textContent=pts+' pts';
+}
+
+// ─── EMERGENCY CONTACT ───────────────────────────────────────
+function saveContact(){
+  const name=document.getElementById('contact-name').value.trim();
+  const phone=document.getElementById('contact-phone').value.trim();
+  if(!name||!phone){toast('Isi nama dan nomor');return;}
+  S.emergencyContact={name,phone};save();
+  document.getElementById('contact-name').value='';
+  document.getElementById('contact-phone').value='';
+  renderContactDisplay();toast('Kontak disimpan!');
+}
+function renderContactDisplay(){
+  const c=document.getElementById('contact-display');if(!c)return;
+  if(!S.emergencyContact){c.innerHTML='<div style="font-size:13px;color:var(--text3);padding:6px 0">Belum ada kontak darurat.</div>';return;}
+  const {name,phone}=S.emergencyContact;
+  c.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-light);margin-bottom:10px"><div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text)">${name}</div><div style="font-size:12px;color:var(--text3)">${phone}</div></div><button onclick="callContact()" style="padding:8px 14px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Hubungi</button></div>`;
+}
+function callContact(){
+  if(!S.emergencyContact){toast('Belum ada kontak');return;}
+  const wa=S.emergencyContact.phone.replace(/^0/,'62');
+  const msg=encodeURIComponent('Hei '+S.emergencyContact.name+', aku butuh support sekarang. Bisa bicara sebentar?');
+  window.open('https://wa.me/'+wa+'?text='+msg,'_blank');
+}
+
+// ─── WEEKLY REPORT ───────────────────────────────────────────
+function renderReport(){
+  const now=new Date();
+  let cleanDays=0,urgeTotWeek=0,moodSum=0,moodCount=0;
+  const dayData=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date(now);d.setDate(d.getDate()-i);
+    const ds=d.toDateString();
+    const hasCheckin=S.journals.some(j=>new Date(j.date).toDateString()===ds&&j.mood==='✅');
+    const hasRelapse=S.relapses.some(r=>new Date(r.date).toDateString()===ds);
+    const dayJ=S.journals.filter(j=>new Date(j.date).toDateString()===ds);
+    const avgMood=dayJ.length?dayJ.reduce((a,j)=>a+(MOOD_SCORE[j.mood]||3),0)/dayJ.length:0;
+    if(avgMood>0){moodSum+=avgMood;moodCount++;}
+    const lbl=d.toLocaleDateString('id-ID',{weekday:'short'}).slice(0,3);
+    const status=hasRelapse?'relapse':hasCheckin?'clean':'empty';
+    if(status==='clean')cleanDays++;
+    dayData.push({lbl,status,mood:avgMood});
+  }
+  urgeTotWeek=S.urgeHistory.filter(u=>(now-new Date(u.date))<7*86400000).length;
+  const sg=document.getElementById('week-stats');
+  if(sg)sg.innerHTML=`<div class="week-stat"><div class="week-stat-val" style="color:var(--teal)">${cleanDays}</div><div class="week-stat-label">Hari clean</div></div><div class="week-stat"><div class="week-stat-val" style="color:var(--amber)">${urgeTotWeek}</div><div class="week-stat-label">Tameng dipakai</div></div><div class="week-stat"><div class="week-stat-val" style="color:var(--purple)">${moodCount?Math.round(moodSum/moodCount*10)/10:'-'}</div><div class="week-stat-label">Rata mood</div></div>`;
+  const dr=document.getElementById('week-day-row');
+  if(dr){dr.innerHTML='';dayData.forEach(d=>{const el=document.createElement('div');el.className='wdd wdd-'+d.status;el.textContent=d.lbl;dr.appendChild(el);});}
+  renderTriggerAnalysis();
+  const mc=document.getElementById('week-mood-chart');
+  if(mc){mc.innerHTML='';const cm={clean:'#1D9E75',relapse:'#E24B4A',empty:'#888780'};dayData.forEach(d=>{const pct=d.mood?d.mood/5*100:0;const el=document.createElement('div');el.className='mood-bar-c';el.innerHTML=`<div class="mood-bar-v" style="height:${pct}%;background:${cm[d.status]}"></div><div class="mood-bar-l">${d.lbl}</div>`;mc.appendChild(el);});}
+}
+function renderTriggerAnalysis(){
+  const c=document.getElementById('trigger-analysis');if(!c)return;
+  const now=new Date();
+  const recent=S.journals.filter(j=>(now-new Date(j.date))<30*86400000);
+  const mc={};recent.forEach(j=>{if(j.mood&&j.mood!=='✅')mc[j.mood]=(mc[j.mood]||0)+1;});
+  const sorted=Object.entries(mc).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(!sorted.length){c.innerHTML='<div style="font-size:13px;color:var(--text3);padding:10px 0">Catat jurnal setiap hari minimal 7 hari untuk melihat analisis.</div>';return;}
+  const max=sorted[0][1];
+  const ML={'😊':'Senang','😌':'Tenang','😐':'Biasa','😔':'Sedih','😤':'Frustrasi','😰':'Cemas','🔥':'Dorongan kuat','💪':'Kuat'};
+  c.innerHTML='';
+  sorted.forEach(([mood,count])=>{
+    const pct=Math.round(count/max*100);
+    const isRisk=['🔥','😔','😰','😤'].includes(mood);
+    const el=document.createElement('div');el.className='trigger-row';
+    el.innerHTML=`<div class="trigger-emoji">${mood}</div><div class="trigger-info"><div class="trigger-label">${ML[mood]||mood}</div><div class="trigger-count">${count}x dalam 30 hari</div></div><div class="trigger-bar-wrap"><div class="trigger-bar-fill" style="width:${pct}%;background:${isRisk?'var(--red)':'var(--teal)'}"></div></div>`;
+    c.appendChild(el);
+  });
+}
+
+// ─── PESAN DIRI SENDIRI ──────────────────────────────────────
+function savePesan(){
+  const txt=document.getElementById('pesan-input').value.trim();
+  if(!txt){toast('Tulis pesanmu dulu');return;}
+  if(!S.pesan)S.pesan=[];
+  S.pesan.unshift({date:new Date().toISOString(),text:txt,streak:getStreak()});
+  if(S.pesan.length>10)S.pesan.pop();
+  save();document.getElementById('pesan-input').value='';renderPesan();toast('Pesan tersimpan');
+}
+function renderPesan(){
+  const c=document.getElementById('pesan-list');if(!c)return;c.innerHTML='';
+  if(!S.pesan||!S.pesan.length){c.innerHTML='<div style="text-align:center;padding:30px 20px;color:var(--text3);font-size:13px">Belum ada pesan. Tulis sekarang selagi kondisi baik — untuk dibaca saat hampir menyerah.</div>';return;}
+  S.pesan.forEach((p,i)=>{
+    const dt=new Date(p.date).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+    const el=document.createElement('div');el.className='pesan-card';
+    el.innerHTML=`<div class="pesan-date">Ditulis ${dt} · Hari ke-${p.streak}</div><div class="pesan-text">"${p.text}"</div><button onclick="deleteP(${i})" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;margin-top:6px;padding:0">Hapus</button>`;
+    c.appendChild(el);
+  });
+}
+function deleteP(i){S.pesan.splice(i,1);save();renderPesan();}
+
+// OVERRIDE showAlasan — sertakan pesan diri
+function showAlasan(){
+  const list=document.getElementById('alasan-popup-list');list.innerHTML='';
+  const items=S.alasan.length?S.alasan:['Tambahkan alasanmu di Setelan → Alasan Berhenti.'];
+  items.forEach((a,i)=>{
+    const el=document.createElement('div');el.className='ap-item';
+    el.innerHTML=`<div class="ap-num">${i+1}</div><div class="ap-text">${a}</div>`;
+    list.appendChild(el);
+  });
+  if(S.pesan&&S.pesan.length){
+    const div=document.createElement('div');
+    div.style='background:var(--purple-light);border-radius:8px;padding:12px;margin-top:10px';
+    div.innerHTML=`<div style="font-size:11px;font-weight:600;color:var(--purple-dark);margin-bottom:4px">Pesan dari dirimu sendiri:</div><div style="font-size:13px;color:var(--purple-dark);font-style:italic;line-height:1.6">"${S.pesan[0].text}"</div>`;
+    list.appendChild(div);
+  }
+  document.getElementById('alasan-overlay').classList.add('show');
+}
+
 // INIT
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').then(reg=>{
-    console.log('SW registered:', reg.scope);
+    console.log('SW registered:',reg.scope);
   }).catch(e=>console.log('SW error:',e));
 }
-initDark();initPin();renderHome();initNotif();
+initDark();initPin();initHabits();renderHome();renderHabits();initNotif();
 setInterval(checkZona,60000);
 </script>
 </body>
